@@ -66,8 +66,25 @@ jobs:
           port: ${{ secrets.VDS_PORT }}
           script: |
             set -e
+
+            # Clone on first deploy, pull on subsequent ones
+            if [ ! -d "${{ secrets.VDS_PATH }}/.git" ]; then
+              echo "==> First deploy: cloning repository..."
+              git clone https://github.com/encodeschool/EMBASSY-BOT.git ${{ secrets.VDS_PATH }}
+            else
+              echo "==> Pulling latest code..."
+              cd ${{ secrets.VDS_PATH }}
+              git pull origin main
+            fi
+
             cd ${{ secrets.VDS_PATH }}
-            git pull origin main
+
+            # Create venv if it doesn't exist yet
+            if [ ! -d "venv" ]; then
+              echo "==> Creating Python virtual environment..."
+              python3 -m venv venv
+            fi
+
             source venv/bin/activate
             pip install -r requirements.txt -q
             sudo systemctl restart helpbot
