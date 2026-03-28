@@ -6,7 +6,9 @@ import secrets
 import time
 
 # { token: (admin_id, expires_at) }
-_store: dict[str, tuple[int, float]] = {}
+from typing import Dict, Tuple
+
+_store: Dict[str, Tuple[int, float]] = {}
 
 TOKEN_TTL = 300  # 5 minutes
 
