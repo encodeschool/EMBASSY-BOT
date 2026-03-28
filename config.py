@@ -6,8 +6,8 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_URL = os.getenv("DB_URL")
 
-ADMINS = [8064548424]  # Telegram IDs
-
+# ADMINS = [8064548424]  # Telegram IDs
+ADMINS = []
 # config.py
 
 TIME_SLOTS = [
