@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.VDS_USER }}
           key: ${{ secrets.VDS_SSH_KEY }}
           port: ${{ secrets.VDS_PORT }}
-          script: mkdir -p /opt/embassybot/admin_web/dist
+          script: mkdir -p ${{ secrets.VDS_PATH }}/admin_web/dist
 
       # ── 4. Upload built frontend to server ─────────────────────────────────
       - name: Upload admin_web/dist to server
@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.VDS_SSH_KEY }}
           port: ${{ secrets.VDS_PORT }}
           source: "admin_web/dist/"
-          target: "/opt/embassybot/admin_web/"
+          target: "${{ secrets.VDS_PATH }}/admin_web/"
           overwrite: true
 
       # ── 5. Pull code & restart service ─────────────────────────────────────
@@ -66,7 +66,7 @@ jobs:
           port: ${{ secrets.VDS_PORT }}
           script: |
             set -e
-            cd /opt/embassybot
+            cd ${{ secrets.VDS_PATH }}
             git pull origin main
             source venv/bin/activate
             pip install -r requirements.txt -q
