@@ -1,0 +1,58 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+msgid "👑 Welcome Admin! Use the buttons below to manage the bot:"
+msgstr "👑 Welcome Admin! Use the buttons below to manage the bot:"
+
+msgid "Welcome! Please select your language:"
+msgstr "Welcome! Please select your language:"
+
+msgid "Menu:"
+msgstr "Menu:"
+
+msgid "📅 Select a date:"
+msgstr "📅 Select a date:"
+
+msgid "❌ This day is fully booked"
+msgstr "❌ This day is fully booked"
+
+msgid "📅 Selected date: {date}\n\n⏰ Choose time:"
+msgstr "📅 Selected date: {date}\n\n⏰ Choose time:"
+
+msgid "⚠️ Slot just became full. Choose another."
+msgstr "⚠️ Slot just became full. Choose another."
+
+msgid "📅 New booking:\nDate: {date}\nTime: {time}\nUser: {user}"
+msgstr "📅 New booking:\nDate: {date}\nTime: {time}\nUser: {user}"
+
+msgid "✅ Booked successfully!\n\n📅 Date: {date}\n⏰ Time: {time}"
+msgstr "✅ Booked successfully!\n\n📅 Date: {date}\n⏰ Time: {time}"
+
+msgid "✍️ Please send your question:"
+msgstr "✍️ Please send your question:"
+
+msgid "✅ Your question has been received. Our staff will reply soon."
+msgstr "✅ Your question has been received. Our staff will reply soon."
+
+msgid "👤 Profile - {name}\n\n"
+msgstr "👤 Profile - {name}\n\n"
+
+msgid "📅 Bookings:\n"
+msgstr "📅 Bookings:\n"
+
+msgid " - No bookings yet\n"
+msgstr " - No bookings yet\n"
+
+msgid "\n❓ Questions:\n"
+msgstr "\n❓ Questions:\n"
+
+msgid " - {q} | Answer: {a}\n"
+msgstr " - {q} | Answer: {a}\n"
+
+msgid " - No questions yet\n"
+msgstr " - No questions yet\n"
+
+msgid "No answer yet"
+msgstr "No answer yet"
