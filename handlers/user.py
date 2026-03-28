@@ -1,4 +1,3 @@
-# handlers/user.py
 from aiogram import Router, types, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -13,7 +12,7 @@ from services.booking_service import get_day_status, get_available_slots
 from keyboards.calendar_kb import generate_calendar
 from config import ADMINS, MAX_PER_SLOT
 from keyboards.admin_kb import admin_panel_kb
-from states.question import QuestionState  # New FSM state for questions
+from states.question import QuestionState  # FSM state for questions
 
 router = Router()
 
@@ -23,7 +22,6 @@ router = Router()
 # =========================
 @router.message(Command("start"))
 async def start(message: types.Message, state: FSMContext):
-    # Save user in DB
     async with SessionLocal() as session:
         result = await session.execute(
             select(User).where(User.telegram_id == message.from_user.id)
@@ -38,14 +36,12 @@ async def start(message: types.Message, state: FSMContext):
             session.add(new_user)
             await session.commit()
 
-    # Detect admin
     if message.from_user.id in ADMINS:
         await message.answer(
             "👑 Welcome Admin! Use the buttons below to manage the bot:",
             reply_markup=admin_panel_kb()
         )
     else:
-        # Regular user flow: ask language first
         await message.answer("Welcome! Please select your language:", reply_markup=language_kb())
 
 
@@ -156,7 +152,6 @@ async def select_time(callback: types.CallbackQuery, state: FSMContext, bot: Bot
 # =========================
 @router.message(lambda m: m.text == "❓ Ask Question")
 async def ask_question(message: types.Message, state: FSMContext):
-    # Set FSM state
     await state.set_state(QuestionState.waiting_for_text)
     await message.answer("✍️ Please send your question:")
 
@@ -173,5 +168,36 @@ async def log_question(message: types.Message, state: FSMContext):
         session.add(q)
         await session.commit()
 
-    await message.answer("✅ Your question has been received.")
+    await message.answer("✅ Your question has been received. Our staff will reply soon.")
     await state.clear()
+
+
+# =========================
+# PROFILE
+# =========================
+@router.message(lambda m: m.text == "👤 Profile")
+async def user_profile(message: types.Message):
+    async with SessionLocal() as session:
+        result = await session.execute(select(User).where(User.telegram_id == message.from_user.id))
+        user = result.scalar()
+
+        bookings = (await session.execute(select(Booking).where(Booking.user_id == user.id))).scalars().all()
+        questions = (await session.execute(select(QuestionLog).where(QuestionLog.user_id == user.id))).scalars().all()
+
+    text = f"👤 Profile - {user.full_name}\n\n"
+    text += "📅 Bookings:\n"
+    if bookings:
+        for b in bookings:
+            text += f"- {b.date} {b.time} | Status: {b.status}\n"
+    else:
+        text += "- No bookings yet\n"
+
+    text += "\n❓ Questions:\n"
+    if questions:
+        for q in questions:
+            reply = getattr(q, "answer", "No answer yet")  # assuming you’ll add an 'answer' field later
+            text += f"- {q.text} | Answer: {reply}\n"
+    else:
+        text += "- No questions yet\n"
+
+    await message.answer(text)

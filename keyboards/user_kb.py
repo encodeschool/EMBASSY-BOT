@@ -1,4 +1,3 @@
-# keyboards/user_kb.py
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 def main_menu():
@@ -6,6 +5,7 @@ def main_menu():
         keyboard=[
             [KeyboardButton(text="📅 Book Appointment")],
             [KeyboardButton(text="❓ Ask Question")],
+            [KeyboardButton(text="👤 Profile")],
         ],
         resize_keyboard=True
     )
