@@ -34,7 +34,17 @@ jobs:
           echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}" > .env
           npm run build
 
-      # ── 3. Upload built frontend to server ─────────────────────────────────
+      # ── 3. Prepare target directory on server ──────────────────────────────
+      - name: Create dist directory on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT }}
+          script: mkdir -p /opt/embassybot/admin_web/dist
+
+      # ── 4. Upload built frontend to server ─────────────────────────────────
       - name: Upload admin_web/dist to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -43,10 +53,10 @@ jobs:
           key: ${{ secrets.VDS_SSH_KEY }}
           port: ${{ secrets.VDS_PORT }}
           source: "admin_web/dist/"
-          target: "/opt/embassybot/admin_web/dist/"
-          strip_components: 2
+          target: "/opt/embassybot/admin_web/"
+          overwrite: true
 
-      # ── 4. Pull code & restart service ─────────────────────────────────────
+      # ── 5. Pull code & restart service ─────────────────────────────────────
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
         with:
