@@ -1,9 +1,10 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import calendar
-from datetime import datetime
+from datetime import datetime, date as date_type
 
 def generate_calendar(year: int, month: int, booked_days: dict):
     kb = []
+    today = date_type.today()
 
     # Header
     kb.append([
@@ -24,21 +25,23 @@ def generate_calendar(year: int, month: int, booked_days: dict):
             if day == 0:
                 row.append(InlineKeyboardButton(text=" ", callback_data="ignore"))
             else:
-                status = booked_days.get(day, 0)
-
-                if status == -1:
-                    text = f"❌ {day}"
-                elif status > 0:
-                    text = f"⚠️ {day}"
+                is_past = date_type(year, month, day) < today
+                if is_past:
+                    row.append(InlineKeyboardButton(text=f"✖ {day}", callback_data="ignore"))
                 else:
-                    text = f"✅ {day}"
-
-                row.append(
-                    InlineKeyboardButton(
-                        text=text,
-                        callback_data=f"date_{year}_{month}_{day}"
+                    status = booked_days.get(day, 0)
+                    if status == -1:
+                        text = f"❌ {day}"
+                    elif status > 0:
+                        text = f"⚠️ {day}"
+                    else:
+                        text = f"✅ {day}"
+                    row.append(
+                        InlineKeyboardButton(
+                            text=text,
+                            callback_data=f"date_{year}_{month}_{day}"
+                        )
                     )
-                )
         kb.append(row)
 
     return InlineKeyboardMarkup(inline_keyboard=kb)

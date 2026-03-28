@@ -1,21 +1,27 @@
 # keyboards/user_kb.py
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from middlewares.i18n import _
+from locales.translations import get_text
 
-def main_menu():
+
+def main_menu(lang: str = "en") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📅 " + _("Book Appointment"))],
-            [KeyboardButton(text="❓ " + _("Ask Question"))],
-            [KeyboardButton(text="👤 " + _("Profile"))],
+            [KeyboardButton(text="📅 " + get_text("btn_book", lang))],
+            [KeyboardButton(text="❓ " + get_text("btn_question", lang))],
+            [KeyboardButton(text="👤 " + get_text("btn_profile", lang))],
         ],
         resize_keyboard=True
     )
 
-def language_kb():
+
+def language_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🇺🇿 UZ"), KeyboardButton(text="🇷🇺 RU"), KeyboardButton(text="🇬🇧 EN")]
+            [
+                KeyboardButton(text="🇺🇿 UZ"),
+                KeyboardButton(text="🇷🇺 RU"),
+                KeyboardButton(text="🇬🇧 EN"),
+            ]
         ],
         resize_keyboard=True
     )

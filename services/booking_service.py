@@ -2,19 +2,21 @@ from sqlalchemy import select
 from db.models import Booking
 from config import TIME_SLOTS, MAX_PER_SLOT
 
+month_prefix = lambda year, month: f"{year}-{str(month).zfill(2)}"
 
 async def get_day_status(session, year, month):
-    result = await session.execute(select(Booking))
+    prefix = month_prefix(year, month)
+    result = await session.execute(
+        select(Booking).where(Booking.date.like(f"{prefix}-%"))
+    )
     bookings = result.scalars().all()
 
     day_map = {}
 
     for b in bookings:
-        y, m, d = map(int, b.date.split("-"))
-        if y == year and m == month:
-            key = d
-            day_map.setdefault(key, 0)
-            day_map[key] += 1
+        d = int(b.date.split("-")[2])
+        day_map.setdefault(d, 0)
+        day_map[d] += 1
 
     # Convert to status
     for day in day_map:

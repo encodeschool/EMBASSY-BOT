@@ -3,20 +3,18 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 
 from db.session import SessionLocal
-from db.models import Booking, User
-from states.admin import BroadcastState
+from db.models import Booking, User, QuestionLog
+from states.admin import BroadcastState, ReplyQuestionState
 from keyboards.admin_kb import admin_panel_kb, booking_status_kb
 from config import ADMINS
-
-from states.admin import ReplyQuestionState
-from keyboards.admin_kb import admin_panel_kb
-from db.models import QuestionLog
+from locales.translations import get_text
 
 router = Router()
 
-# --- Admin check ---
+
 def is_admin(user_id: int) -> bool:
     return user_id in ADMINS
+
 
 # --- View bookings with status buttons ---
 @router.callback_query(F.data == "view_bookings")
@@ -31,12 +29,17 @@ async def callback_view_bookings(callback: types.CallbackQuery):
         await callback.message.edit_text("No bookings yet.")
         return
 
-    # Send each booking as a separate message with status buttons
     for b in bookings:
-        text = f"📋 Booking ID: {b.id}\nUser ID: {b.user_id}\nDate: {b.date} {b.time}\nStatus: {b.status}"
+        text = (
+            f"📋 Booking ID: {b.id}\n"
+            f"User ID: {b.user_id}\n"
+            f"Date: {b.date} {b.time}\n"
+            f"Status: {b.status}"
+        )
         await callback.message.answer(text, reply_markup=booking_status_kb(b.id))
 
-    await callback.message.delete()  # optional: remove the original message
+    await callback.message.delete()
+
 
 # --- Change booking status ---
 @router.callback_query(F.data.startswith("status_"))
@@ -44,9 +47,10 @@ async def callback_change_status(callback: types.CallbackQuery):
     if not is_admin(callback.from_user.id):
         return await callback.message.answer("❌ Not authorized.")
 
-    # Parse callback_data: status_<booking_id>_<new_status>
-    _, booking_id_str, new_status = callback.data.split("_")
-    booking_id = int(booking_id_str)
+    parts = callback.data.split("_")
+    # callback_data format: status_<id>_<new_status>
+    booking_id = int(parts[1])
+    new_status = parts[2]
 
     async with SessionLocal() as session:
         result = await session.execute(select(Booking).where(Booking.id == booking_id))
@@ -59,16 +63,26 @@ async def callback_change_status(callback: types.CallbackQuery):
         booking.status = new_status
         await session.commit()
 
-    # Optionally notify the user
+    # Notify the user in their own language
     try:
-        await callback.message.bot.send_message(
-            booking.user_id,
-            f"📌 Your booking on {booking.date} {booking.time} is now '{new_status}'."
-        )
+        async with SessionLocal() as session2:
+            user_result = await session2.execute(select(User).where(User.id == booking.user_id))
+            user = user_result.scalar()
+        if user:
+            lang = (user.language or "uz").lower()
+            status_label = get_text(f"status_{new_status}", lang)
+            msg = get_text(
+                "notify_booking_status", lang,
+                date=booking.date,
+                time=booking.time,
+                status=status_label,
+            )
+            await callback.message.bot.send_message(user.telegram_id, msg)
     except Exception:
         pass
 
     await callback.message.edit_text(f"✅ Booking status updated to '{new_status}'")
+
 
 # --- Stats ---
 @router.callback_query(F.data == "stats")
@@ -80,7 +94,10 @@ async def callback_stats(callback: types.CallbackQuery):
         users = (await session.execute(select(User))).scalars().all()
         bookings = (await session.execute(select(Booking))).scalars().all()
 
-    await callback.message.edit_text(f"📊 Stats:\nUsers: {len(users)}\nBookings: {len(bookings)}")
+    await callback.message.edit_text(
+        f"📊 Stats:\nUsers: {len(users)}\nBookings: {len(bookings)}"
+    )
+
 
 # --- Broadcast ---
 @router.callback_query(F.data == "broadcast")
@@ -90,6 +107,7 @@ async def callback_broadcast(callback: types.CallbackQuery, state: FSMContext):
 
     await state.set_state(BroadcastState.message)
     await callback.message.edit_text("📢 Send the message to broadcast to all users:")
+
 
 @router.message(BroadcastState.message)
 async def send_broadcast(message: types.Message, state: FSMContext):
@@ -109,6 +127,7 @@ async def send_broadcast(message: types.Message, state: FSMContext):
 
     await message.answer(f"✅ Broadcast sent to {sent_count} users.")
     await state.clear()
+
 
 # --- View questions ---
 @router.callback_query(F.data == "view_questions")
@@ -130,7 +149,9 @@ async def callback_view_questions(callback: types.CallbackQuery):
                 [types.InlineKeyboardButton(text="✍️ Reply", callback_data=f"reply_{q.id}")]
             ]
         )
-        await callback.message.answer(f"❓ {q.text}\nAnswer: {answer_text}", reply_markup=kb)
+        await callback.message.answer(
+            f"❓ {q.text}\nAnswer: {answer_text}", reply_markup=kb
+        )
 
     await callback.message.delete()
 
@@ -157,7 +178,9 @@ async def save_reply(message: types.Message, state: FSMContext):
     question_id = data.get("question_id")
 
     async with SessionLocal() as session:
-        result = await session.execute(select(QuestionLog).where(QuestionLog.id == question_id))
+        result = await session.execute(
+            select(QuestionLog).where(QuestionLog.id == question_id)
+        )
         q = result.scalar()
         if not q:
             await message.answer("❌ Question not found.")
@@ -167,12 +190,19 @@ async def save_reply(message: types.Message, state: FSMContext):
         q.answer = message.text
         await session.commit()
 
-    # Notify the user
+    # Notify the user in their own language
     try:
-        await message.bot.send_message(
-            q.user_id,
-            f"📌 Your question has been answered:\n❓ {q.text}\n✅ Answer: {q.answer}"
-        )
+        async with SessionLocal() as session2:
+            user_result = await session2.execute(select(User).where(User.id == q.user_id))
+            user = user_result.scalar()
+        if user:
+            lang = (user.language or "uz").lower()
+            msg = get_text(
+                "notify_question_answered", lang,
+                question=q.text,
+                answer=q.answer,
+            )
+            await message.bot.send_message(user.telegram_id, msg)
     except Exception:
         pass
 
