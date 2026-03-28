@@ -6,23 +6,21 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Checkout ────────────────────────────────────────────────────────
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      # ── 1. Checkout ─────────────────────────────────────────
+      - uses: actions/checkout@v4
 
-      # ── 2. Build React admin panel ─────────────────────────────────────────
-      - name: Setup Node.js
+      # ── 2. Build frontend ───────────────────────────────────
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: admin_web/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install frontend deps
         working-directory: admin_web
         run: npm ci
 
@@ -34,31 +32,8 @@ jobs:
           echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}" > .env
           npm run build
 
-      # ── 3. Ensure target directory exists ──────────────────────────────────
-      - name: Prepare server directory
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VDS_HOST }}
-          username: ${{ secrets.VDS_USER }}
-          key: ${{ secrets.VDS_SSH_KEY }}
-          port: ${{ secrets.VDS_PORT }}
-          script: |
-            mkdir -p ${{ secrets.VDS_PATH }}/admin_web/dist
-
-      # ── 4. Upload built frontend ───────────────────────────────────────────
-      - name: Upload frontend build
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VDS_HOST }}
-          username: ${{ secrets.VDS_USER }}
-          key: ${{ secrets.VDS_SSH_KEY }}
-          port: ${{ secrets.VDS_PORT }}
-          source: "admin_web/dist/"
-          target: "${{ secrets.VDS_PATH }}/admin_web/"
-          overwrite: true
-
-      # ── 5. Deploy backend & restart service ────────────────────────────────
-      - name: Deploy on server
+      # ── 3. Deploy backend FIRST ──────────────────────────────
+      - name: Deploy backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VDS_HOST }}
@@ -69,41 +44,45 @@ jobs:
             set -e
             cd ${{ secrets.VDS_PATH }}
 
-            # ── Git sync ────────────────────────────────────────────────────
             if [ ! -d ".git" ]; then
-              echo "==> Initialising git repository..."
               git init
               git remote add origin https://github.com/encodeschool/EMBASSY-BOT.git
-              git fetch --depth=1 origin main
-              git checkout -b main --track origin/main
-              git reset --hard origin/main
-            else
-              echo "==> Updating code..."
-              git fetch --depth=1 origin main
-              git reset --hard origin/main
             fi
 
-            # ── Ensure frontend build survives git reset ────────────────────
-            mkdir -p admin_web/dist
+            git fetch --depth=1 origin main
+            git reset --hard origin/main
 
-            # ── Python setup ────────────────────────────────────────────────
             if [ ! -d "venv" ]; then
-              echo "==> Creating Python virtual environment..."
               python3 -m venv venv
             fi
 
             source venv/bin/activate
-
-            echo "==> Installing dependencies..."
             pip install --upgrade pip
             pip install -r requirements.txt
 
-            # ── Restart service ─────────────────────────────────────────────
-            echo "==> Restarting service..."
+      # ── 4. Upload frontend AFTER git reset ───────────────────
+      - name: Upload frontend
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT }}
+          source: "admin_web/dist/"
+          target: "${{ secrets.VDS_PATH }}/admin_web/"
+          overwrite: true
+
+      # ── 5. Restart service ───────────────────────────────────
+      - name: Restart service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT }}
+          script: |
             sudo systemctl restart helpbot
 
-            # ── Optional health check ───────────────────────────────────────
-            echo "==> Running health check..."
             curl -f http://localhost:8000/health || echo "⚠️ Health check failed"
 
-            echo "✅ Deployment complete at $(date)"
+            echo "✅ Deploy complete"
