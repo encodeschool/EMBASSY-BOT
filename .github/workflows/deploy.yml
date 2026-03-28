@@ -88,6 +88,7 @@ jobs:
             fi
 
             source venv/bin/activate
+            pip install --upgrade typing-extensions -q
             pip install -r requirements.txt -q
-            sudo systemctl restart helpbot
+            systemctl restart helpbot
             echo "✅ Deployment complete at $(date)"
