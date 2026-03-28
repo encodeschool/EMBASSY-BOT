@@ -1,0 +1,64 @@
+name: Deploy to VDS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Build React admin panel ─────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: admin_web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: admin_web
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: admin_web
+        env:
+          VITE_BOT_USERNAME: ${{ secrets.VITE_BOT_USERNAME }}
+        run: |
+          echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}" > .env
+          npm run build
+
+      # ── 3. Upload built frontend to server ─────────────────────────────────
+      - name: Upload admin_web/dist to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT }}
+          source: "admin_web/dist/"
+          target: "/opt/embassybot/admin_web/dist/"
+          strip_components: 2
+
+      # ── 4. Pull code & restart service ─────────────────────────────────────
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT }}
+          script: |
+            set -e
+            cd /opt/embassybot
+            git pull origin main
+            source venv/bin/activate
+            pip install -r requirements.txt -q
+            sudo systemctl restart helpbot
+            echo "✅ Deployment complete at $(date)"

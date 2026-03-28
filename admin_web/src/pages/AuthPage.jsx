@@ -2,57 +2,47 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || ''
-
 export default function AuthPage() {
   const navigate = useNavigate()
+  const [status, setStatus] = useState('idle') // idle | verifying | error
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  // If already logged in, redirect immediately
   useEffect(() => {
-    if (localStorage.getItem('adminToken')) navigate('/admin', { replace: true })
-  }, [navigate])
-
-  // Inject Telegram Login Widget script
-  useEffect(() => {
-    if (!BOT_USERNAME) return
-
-    window.onTelegramAuth = async (user) => {
-      setLoading(true)
-      setError('')
-      try {
-        const { data } = await api.post('/auth/login', user)
-        localStorage.setItem('adminToken', data.token)
-        localStorage.setItem('adminName', data.name)
-        navigate('/admin', { replace: true })
-      } catch (err) {
-        const msg = err.response?.data?.detail || 'Authentication failed.'
-        setError(msg)
-      } finally {
-        setLoading(false)
-      }
+    // Already logged in → go straight to panel
+    if (localStorage.getItem('adminToken')) {
+      navigate('/admin', { replace: true })
+      return
     }
 
-    const container = document.getElementById('tg-login-btn')
-    if (container && !container.hasChildNodes()) {
-      const script = document.createElement('script')
-      script.src = 'https://telegram.org/js/telegram-widget.js?22'
-      script.setAttribute('data-telegram-login', BOT_USERNAME)
-      script.setAttribute('data-size', 'large')
-      script.setAttribute('data-radius', '8')
-      script.setAttribute('data-onauth', 'onTelegramAuth(user)')
-      script.setAttribute('data-request-access', 'write')
-      script.async = true
-      container.appendChild(script)
+    // Check for ?token= in URL (from /webadmin bot command)
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    if (token) {
+      verifyToken(token)
     }
   }, [navigate])
+
+  const verifyToken = async (token) => {
+    setStatus('verifying')
+    try {
+      const { data } = await api.post('/auth/token-login', { token })
+      localStorage.setItem('adminToken', data.token)
+      localStorage.setItem('adminName', data.name || 'Admin')
+      navigate('/admin', { replace: true })
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Link is invalid or expired.'
+      setError(msg)
+      setStatus('error')
+      // Clean the token from URL so user sees a clean error
+      window.history.replaceState({}, '', '/')
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 px-4">
       <div className="w-full max-w-md">
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-3xl mb-4 shadow-lg">
@@ -60,55 +50,60 @@ export default function AuthPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900">HelpBot Admin</h1>
             <p className="text-sm text-gray-500 mt-1 text-center">
-              Sign in with Telegram to access the admin panel
+              Secure admin panel for your Telegram bot
             </p>
           </div>
 
-          {/* Steps */}
-          <div className="bg-blue-50 rounded-xl p-4 mb-6 space-y-2">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">How it works</p>
-            <div className="flex items-start gap-2 text-sm text-blue-800">
-              <span className="font-bold">1.</span>
-              <span>Click the Telegram button below</span>
+          {/* States */}
+          {status === 'verifying' && (
+            <div className="flex flex-col items-center gap-3 py-4">
+              <svg className="animate-spin h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              <p className="text-sm text-gray-600">Verifying your identity…</p>
             </div>
-            <div className="flex items-start gap-2 text-sm text-blue-800">
-              <span className="font-bold">2.</span>
-              <span>Authorize with your Telegram account</span>
-            </div>
-            <div className="flex items-start gap-2 text-sm text-blue-800">
-              <span className="font-bold">3.</span>
-              <span>Access is granted if you are an admin</span>
-            </div>
-          </div>
+          )}
 
-          {/* Telegram Login Widget or placeholder */}
-          <div className="flex flex-col items-center gap-3">
-            {!BOT_USERNAME ? (
-              <div className="text-center py-4">
-                <p className="text-amber-600 text-sm font-medium">⚠️ BOT_USERNAME not configured</p>
-                <p className="text-gray-400 text-xs mt-1">
-                  Set <code className="bg-gray-100 px-1 rounded">VITE_BOT_USERNAME</code> in{' '}
-                  <code className="bg-gray-100 px-1 rounded">admin_web/.env</code>
+          {status === 'error' && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-center">
+              <p className="text-red-700 font-medium text-sm">❌ {error}</p>
+            </div>
+          )}
+
+          {/* How to access */}
+          {status !== 'verifying' && (
+            <div className="bg-blue-50 rounded-xl p-5 space-y-3">
+              <p className="text-sm font-semibold text-blue-800">How to access the panel:</p>
+
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                <p className="text-sm text-blue-900">Open your Telegram bot</p>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                <div>
+                  <p className="text-sm text-blue-900">Send the command:</p>
+                  <code className="inline-block mt-1 bg-white border border-blue-200 text-blue-700 font-mono text-sm px-3 py-1 rounded-lg">
+                    /webadmin
+                  </code>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+                <p className="text-sm text-blue-900">Click the <strong>Open Admin Panel</strong> button the bot sends you</p>
+              </div>
+
+              <div className="mt-2 pt-3 border-t border-blue-200">
+                <p className="text-xs text-blue-600">
+                  🔒 Each link is single-use and expires in 5 minutes.
+                  Only registered admins can generate a link.
                 </p>
               </div>
-            ) : loading ? (
-              <div className="flex items-center gap-2 text-blue-600">
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                <span className="text-sm">Verifying…</span>
-              </div>
-            ) : (
-              <div id="tg-login-btn" />
-            )}
-
-            {error && (
-              <div className="w-full bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700 text-center">
-                {error}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-xs text-slate-500 mt-4">

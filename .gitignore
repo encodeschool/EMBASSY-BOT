@@ -1,0 +1,19 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# React
+admin_web/node_modules/
+admin_web/dist/
+
+# OS
+.DS_Store
+Thumbs.db

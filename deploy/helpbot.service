@@ -1,0 +1,18 @@
+[Unit]
+Description=HelpBot — Telegram Bot + Admin API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/embassybot
+EnvironmentFile=/opt/embassybot/.env
+ExecStart=/opt/embassybot/venv/bin/python app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

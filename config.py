@@ -4,6 +4,7 @@ import os
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "")  # username WITHOUT @, e.g. MyHelpBot
 DB_URL = os.getenv("DB_URL")
 
 ADMINS = [8064548424]  # Telegram IDs

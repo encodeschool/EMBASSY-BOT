@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(python -c \"from aiogram.utils.i18n import I18n; i18n = I18n\\(path=''locales'', default_locale=''uz'', domain=''messages''\\); print\\(''i18n ok''\\)\")",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":8000\")",
+      "Bash(tasklist:*)",
+      "Bash(powershell -Command \"Get-Process -Id 15348 | Select-Object Name, Id, Path\")",
+      "Bash(powershell -Command \"Stop-Process -Id 15348 -Force; Write-Output 'killed'\")"
     ]
   }
 }
