@@ -8,7 +8,7 @@ from db.models import Base
 from db.session import engine
 from middlewares.i18n import i18n_middleware
 
-API_PORT = int(os.getenv("API_PORT", "8000"))
+API_PORT = int(os.getenv("API_PORT", "8010"))
 
 
 async def run_bot():
