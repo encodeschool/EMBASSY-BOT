@@ -13,7 +13,7 @@ from services.booking_service import get_day_status, get_available_slots
 from keyboards.calendar_kb import generate_calendar
 from config import ADMINS, MAX_PER_SLOT
 from keyboards.admin_kb import admin_panel_kb
-from keyboards.user_kb import main_menu, language_kb
+from states.question import QuestionState  # New FSM state for questions
 
 router = Router()
 
@@ -49,6 +49,9 @@ async def start(message: types.Message, state: FSMContext):
         await message.answer("Welcome! Please select your language:", reply_markup=language_kb())
 
 
+# =========================
+# LANGUAGE SELECTION
+# =========================
 @router.message(lambda m: m.text in ["🇺🇿 UZ", "🇷🇺 RU", "🇬🇧 EN"])
 async def set_language(message: types.Message):
     lang = message.text.split()[1]
@@ -152,12 +155,14 @@ async def select_time(callback: types.CallbackQuery, state: FSMContext, bot: Bot
 # QUESTIONS
 # =========================
 @router.message(lambda m: m.text == "❓ Ask Question")
-async def ask(message: types.Message):
-    await message.answer("✍️ Send your question:")
+async def ask_question(message: types.Message, state: FSMContext):
+    # Set FSM state
+    await state.set_state(QuestionState.waiting_for_text)
+    await message.answer("✍️ Please send your question:")
 
 
-@router.message()
-async def log_question(message: types.Message):
+@router.message(QuestionState.waiting_for_text)
+async def log_question(message: types.Message, state: FSMContext):
     async with SessionLocal() as session:
         result = await session.execute(
             select(User).where(User.telegram_id == message.from_user.id)
@@ -169,3 +174,4 @@ async def log_question(message: types.Message):
         await session.commit()
 
     await message.answer("✅ Your question has been received.")
+    await state.clear()
