@@ -34,18 +34,19 @@ jobs:
           echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}" > .env
           npm run build
 
-      # ── 3. Prepare target directory on server ──────────────────────────────
-      - name: Create dist directory on server
+      # ── 3. Ensure target directory exists ──────────────────────────────────
+      - name: Prepare server directory
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VDS_HOST }}
           username: ${{ secrets.VDS_USER }}
           key: ${{ secrets.VDS_SSH_KEY }}
           port: ${{ secrets.VDS_PORT }}
-          script: mkdir -p ${{ secrets.VDS_PATH }}/admin_web/dist
+          script: |
+            mkdir -p ${{ secrets.VDS_PATH }}/admin_web/dist
 
-      # ── 4. Upload built frontend to server ─────────────────────────────────
-      - name: Upload admin_web/dist to server
+      # ── 4. Upload built frontend ───────────────────────────────────────────
+      - name: Upload frontend build
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VDS_HOST }}
@@ -56,7 +57,7 @@ jobs:
           target: "${{ secrets.VDS_PATH }}/admin_web/"
           overwrite: true
 
-      # ── 5. Pull code & restart service ─────────────────────────────────────
+      # ── 5. Deploy backend & restart service ────────────────────────────────
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -68,7 +69,7 @@ jobs:
             set -e
             cd ${{ secrets.VDS_PATH }}
 
-            # Init git in-place on first deploy (directory may already exist with files)
+            # ── Git sync ────────────────────────────────────────────────────
             if [ ! -d ".git" ]; then
               echo "==> Initialising git repository..."
               git init
@@ -77,18 +78,32 @@ jobs:
               git checkout -b main --track origin/main
               git reset --hard origin/main
             else
-              echo "==> Pulling latest code..."
-              git pull origin main
+              echo "==> Updating code..."
+              git fetch --depth=1 origin main
+              git reset --hard origin/main
             fi
 
-            # Create venv if it doesn't exist yet
+            # ── Ensure frontend build survives git reset ────────────────────
+            mkdir -p admin_web/dist
+
+            # ── Python setup ────────────────────────────────────────────────
             if [ ! -d "venv" ]; then
               echo "==> Creating Python virtual environment..."
               python3 -m venv venv
             fi
 
             source venv/bin/activate
-            pip install --upgrade typing-extensions -q
-            pip install -r requirements.txt -q
-            systemctl restart helpbot
+
+            echo "==> Installing dependencies..."
+            pip install --upgrade pip
+            pip install -r requirements.txt
+
+            # ── Restart service ─────────────────────────────────────────────
+            echo "==> Restarting service..."
+            sudo systemctl restart helpbot
+
+            # ── Optional health check ───────────────────────────────────────
+            echo "==> Running health check..."
+            curl -f http://localhost:8000/health || echo "⚠️ Health check failed"
+
             echo "✅ Deployment complete at $(date)"
