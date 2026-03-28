@@ -8,6 +8,7 @@ from config import ADMINS
 from db.session import SessionLocal
 from db.models import Booking, User
 from states.admin import BroadcastState
+from keyboards.admin_kb import admin_panel_kb
 
 router = Router()
 
@@ -25,10 +26,8 @@ async def admin_panel(message: types.Message):
         return await message.answer("❌ You are not authorized as admin.")
 
     await message.answer(
-        "👑 Admin Panel:\n"
-        "/bookings - view bookings\n"
-        "/broadcast - send message\n"
-        "/stats - statistics"
+        "👑 Admin Panel - choose an action:",
+        reply_markup=admin_panel_kb()
     )
 
 

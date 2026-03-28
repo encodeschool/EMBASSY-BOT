@@ -12,6 +12,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from services.booking_service import get_day_status, get_available_slots
 from keyboards.calendar_kb import generate_calendar
 from config import ADMINS, MAX_PER_SLOT
+from keyboards.admin_kb import admin_panel_kb
+from keyboards.user_kb import main_menu, language_kb
 
 router = Router()
 
@@ -20,7 +22,8 @@ router = Router()
 # START + LANGUAGE
 # =========================
 @router.message(Command("start"))
-async def start(message: types.Message):
+async def start(message: types.Message, state: FSMContext):
+    # Save user in DB
     async with SessionLocal() as session:
         result = await session.execute(
             select(User).where(User.telegram_id == message.from_user.id)
@@ -28,14 +31,22 @@ async def start(message: types.Message):
         user = result.scalar()
 
         if not user:
-            user = User(
+            new_user = User(
                 telegram_id=message.from_user.id,
                 full_name=message.from_user.full_name
             )
-            session.add(user)
+            session.add(new_user)
             await session.commit()
 
-    await message.answer("Select language:", reply_markup=language_kb())
+    # Detect admin
+    if message.from_user.id in ADMINS:
+        await message.answer(
+            "👑 Welcome Admin! Use the buttons below to manage the bot:",
+            reply_markup=admin_panel_kb()
+        )
+    else:
+        # Regular user flow: ask language first
+        await message.answer("Welcome! Please select your language:", reply_markup=language_kb())
 
 
 @router.message(lambda m: m.text in ["🇺🇿 UZ", "🇷🇺 RU", "🇬🇧 EN"])
