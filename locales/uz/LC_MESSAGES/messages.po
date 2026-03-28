@@ -1,58 +1,26 @@
-msgid ""
-msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
-"Language: uz\n"
-
-msgid "👑 Welcome Admin! Use the buttons below to manage the bot:"
-msgstr "👑 Admin xush kelibsiz! Botni boshqarish uchun pastdagi tugmalardan foydalaning:"
-
 msgid "Welcome! Please select your language:"
 msgstr "Xush kelibsiz! Iltimos, tilni tanlang:"
 
 msgid "Menu:"
 msgstr "Menyu:"
 
-msgid "📅 Select a date:"
-msgstr "📅 Sanani tanlang:"
+msgid "Book Appointment"
+msgstr "Uchrashuvga yozilish"
 
-msgid "❌ This day is fully booked"
-msgstr "❌ Bu kunda barcha vaqtlar band"
+msgid "Ask Question"
+msgstr "Savol berish"
 
-msgid "📅 Selected date: {date}\n\n⏰ Choose time:"
-msgstr "📅 Tanlangan sana: {date}\n\n⏰ Vaqtni tanlang:"
+msgid "Profile"
+msgstr "Profil"
 
-msgid "⚠️ Slot just became full. Choose another."
-msgstr "⚠️ Bu vaqt allaqachon band bo‘ldi. Boshqasini tanlang."
+msgid "Please send your question:"
+msgstr "Iltimos, savolingizni yuboring:"
 
-msgid "📅 New booking:\nDate: {date}\nTime: {time}\nUser: {user}"
-msgstr "📅 Yangi buyurtma:\nSana: {date}\nVaqt: {time}\nFoydalanuvchi: {user}"
+msgid "Your question has been received. Our staff will reply soon."
+msgstr "Sizning savolingiz qabul qilindi. Xodimlarimiz tez orada javob beradi."
 
-msgid "✅ Booked successfully!\n\n📅 Date: {date}\n⏰ Time: {time}"
-msgstr "✅ Muvaffaqiyatli bron qilindi!\n\n📅 Sana: {date}\n⏰ Vaqt: {time}"
+msgid "Selected date:"
+msgstr "Tanlangan sana:"
 
-msgid "✍️ Please send your question:"
-msgstr "✍️ Iltimos, savolingizni yuboring:"
-
-msgid "✅ Your question has been received. Our staff will reply soon."
-msgstr "✅ Savolingiz qabul qilindi. Xodimlarimiz tez orada javob beradi."
-
-msgid "👤 Profile - {name}\n\n"
-msgstr "👤 Profil - {name}\n\n"
-
-msgid "📅 Bookings:\n"
-msgstr "📅 Buyurtmalar:\n"
-
-msgid " - No bookings yet\n"
-msgstr " - Hozirgacha buyurtmalar yo‘q\n"
-
-msgid "\n❓ Questions:\n"
-msgstr "\n❓ Savollar:\n"
-
-msgid " - {q} | Answer: {a}\n"
-msgstr " - {q} | Javob: {a}\n"
-
-msgid " - No questions yet\n"
-msgstr " - Hozirgacha savollar yo‘q\n"
-
-msgid "No answer yet"
-msgstr "Javob yo‘q"
+msgid "Choose time:"
+msgstr "Vaqtni tanlang:"

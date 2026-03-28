@@ -178,26 +178,39 @@ async def log_question(message: types.Message, state: FSMContext):
 @router.message(lambda m: m.text == "👤 Profile")
 async def user_profile(message: types.Message):
     async with SessionLocal() as session:
+        # Get user
         result = await session.execute(select(User).where(User.telegram_id == message.from_user.id))
         user = result.scalar()
+        if not user:
+            await message.answer("❌ User not found. Try /start")
+            return
 
+        # Get bookings
         bookings = (await session.execute(select(Booking).where(Booking.user_id == user.id))).scalars().all()
+        # Get questions
         questions = (await session.execute(select(QuestionLog).where(QuestionLog.user_id == user.id))).scalars().all()
 
-    text = f"👤 Profile - {user.full_name}\n\n"
-    text += "📅 Bookings:\n"
+    # Build profile message
+    text_lines = [f"👤 *Profile:* {user.full_name}", f"🌐 Language: {user.language}", ""]
+    
+    # Bookings section
+    text_lines.append("📅 *Bookings:*")
     if bookings:
         for b in bookings:
-            text += f"- {b.date} {b.time} | Status: {b.status}\n"
+            status_emoji = {"pending": "⏳", "approved": "✅", "rejected": "❌"}.get(b.status, "❓")
+            text_lines.append(f"{status_emoji} {b.date} {b.time} | Status: {b.status.capitalize()}")
     else:
-        text += "- No bookings yet\n"
+        text_lines.append("- No bookings yet")
+    text_lines.append("")
 
-    text += "\n❓ Questions:\n"
+    # Questions section (show last 5)
+    text_lines.append("❓ *Recent Questions:*")
     if questions:
-        for q in questions:
-            reply = getattr(q, "answer", "No answer yet")  # assuming you’ll add an 'answer' field later
-            text += f"- {q.text} | Answer: {reply}\n"
+        for q in questions[-5:]:  # only last 5 questions
+            answer = q.answer if q.answer else "❌ Not answered yet"
+            text_lines.append(f"- {q.text}\n  ↪ Answer: {answer}")
     else:
-        text += "- No questions yet\n"
+        text_lines.append("- No questions yet")
 
-    await message.answer(text)
+    # Send as single formatted message
+    await message.answer("\n".join(text_lines), parse_mode="Markdown")
