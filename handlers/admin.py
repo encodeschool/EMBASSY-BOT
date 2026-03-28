@@ -8,6 +8,10 @@ from states.admin import BroadcastState
 from keyboards.admin_kb import admin_panel_kb, booking_status_kb
 from config import ADMINS
 
+from states.admin import ReplyQuestionState
+from keyboards.admin_kb import admin_panel_kb
+from db.models import QuestionLog
+
 router = Router()
 
 # --- Admin check ---
@@ -104,4 +108,73 @@ async def send_broadcast(message: types.Message, state: FSMContext):
             pass
 
     await message.answer(f"✅ Broadcast sent to {sent_count} users.")
+    await state.clear()
+
+# --- View questions ---
+@router.callback_query(F.data == "view_questions")
+async def callback_view_questions(callback: types.CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        return await callback.message.answer("❌ Not authorized.")
+
+    async with SessionLocal() as session:
+        questions = (await session.execute(select(QuestionLog))).scalars().all()
+
+    if not questions:
+        await callback.message.edit_text("No questions yet.")
+        return
+
+    for q in questions:
+        answer_text = q.answer if q.answer else "❌ Not answered yet"
+        kb = types.InlineKeyboardMarkup(
+            inline_keyboard=[
+                [types.InlineKeyboardButton(text="✍️ Reply", callback_data=f"reply_{q.id}")]
+            ]
+        )
+        await callback.message.answer(f"❓ {q.text}\nAnswer: {answer_text}", reply_markup=kb)
+
+    await callback.message.delete()
+
+
+# --- Start reply FSM ---
+@router.callback_query(F.data.startswith("reply_"))
+async def start_reply(callback: types.CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.message.answer("❌ Not authorized.")
+
+    _, question_id = callback.data.split("_")
+    await state.update_data(question_id=int(question_id))
+    await state.set_state(ReplyQuestionState.message)
+    await callback.message.answer("✍️ Send your reply:")
+
+
+# --- Receive reply and save ---
+@router.message(ReplyQuestionState.message)
+async def save_reply(message: types.Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return await message.answer("❌ Not authorized.")
+
+    data = await state.get_data()
+    question_id = data.get("question_id")
+
+    async with SessionLocal() as session:
+        result = await session.execute(select(QuestionLog).where(QuestionLog.id == question_id))
+        q = result.scalar()
+        if not q:
+            await message.answer("❌ Question not found.")
+            await state.clear()
+            return
+
+        q.answer = message.text
+        await session.commit()
+
+    # Notify the user
+    try:
+        await message.bot.send_message(
+            q.user_id,
+            f"📌 Your question has been answered:\n❓ {q.text}\n✅ Answer: {q.answer}"
+        )
+    except Exception:
+        pass
+
+    await message.answer("✅ Reply sent!")
     await state.clear()
