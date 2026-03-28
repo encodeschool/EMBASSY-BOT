@@ -66,18 +66,20 @@ jobs:
           port: ${{ secrets.VDS_PORT }}
           script: |
             set -e
+            cd ${{ secrets.VDS_PATH }}
 
-            # Clone on first deploy, pull on subsequent ones
-            if [ ! -d "${{ secrets.VDS_PATH }}/.git" ]; then
-              echo "==> First deploy: cloning repository..."
-              git clone https://github.com/encodeschool/EMBASSY-BOT.git ${{ secrets.VDS_PATH }}
+            # Init git in-place on first deploy (directory may already exist with files)
+            if [ ! -d ".git" ]; then
+              echo "==> Initialising git repository..."
+              git init
+              git remote add origin https://github.com/encodeschool/EMBASSY-BOT.git
+              git fetch --depth=1 origin main
+              git checkout -b main --track origin/main
+              git reset --hard origin/main
             else
               echo "==> Pulling latest code..."
-              cd ${{ secrets.VDS_PATH }}
               git pull origin main
             fi
-
-            cd ${{ secrets.VDS_PATH }}
 
             # Create venv if it doesn't exist yet
             if [ ! -d "venv" ]; then
