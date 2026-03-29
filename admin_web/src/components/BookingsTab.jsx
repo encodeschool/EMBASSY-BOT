@@ -41,7 +41,7 @@ export default function BookingsTab() {
   const counts = Object.fromEntries(FILTERS.slice(1).map((f) => [f, bookings.filter((b) => b.status === f).length]))
 
   return (
-    <div className="space-y-5 max-w-5xl">
+    <div className="space-y-5 max-w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-gray-900">Bookings</h2>

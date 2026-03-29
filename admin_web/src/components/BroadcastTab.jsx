@@ -61,7 +61,7 @@ export default function BroadcastTab() {
   const isNearLimit = input.length > MAX_LEN * 0.9
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-2xl">
+    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-full">
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-1 py-4 space-y-6">
