@@ -33,8 +33,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar
         active={activeTab}
         onSelect={setActiveTab}
@@ -44,36 +43,34 @@ export default function AdminPage() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top header */}
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3 flex-shrink-0">
-          {/* Hamburger (mobile) */}
+        {/* Topbar */}
+        <header className="h-16 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center gap-4 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
+            className="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
             </svg>
           </button>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-semibold text-gray-900 truncate">
-              {TAB_LABELS[activeTab]}
-            </h1>
+            <h1 className="text-sm font-semibold text-gray-900">{TAB_LABELS[activeTab]}</h1>
           </div>
 
-          {/* Admin badge */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
-            <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-xs text-gray-500 font-medium">Live</span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold text-white">
               {adminName.charAt(0).toUpperCase()}
             </div>
-            <span className="hidden sm:block truncate max-w-32">{adminName}</span>
           </div>
         </header>
 
-        {/* Scrollable content */}
+        {/* Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {TABS[activeTab]}
         </main>

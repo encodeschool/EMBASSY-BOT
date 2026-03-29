@@ -4,22 +4,17 @@ import api from '../api'
 
 export default function AuthPage() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState('idle') // idle | verifying | error
+  const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // Already logged in → go straight to panel
     if (localStorage.getItem('adminToken')) {
       navigate('/admin', { replace: true })
       return
     }
-
-    // Check for ?token= in URL (from /webadmin bot command)
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
-    if (token) {
-      verifyToken(token)
-    }
+    if (token) verifyToken(token)
   }, [navigate])
 
   const verifyToken = async (token) => {
@@ -33,82 +28,79 @@ export default function AuthPage() {
       const msg = err.response?.data?.detail || 'Link is invalid or expired.'
       setError(msg)
       setStatus('error')
-      // Clean the token from URL so user sees a clean error
       window.history.replaceState({}, '', '/')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10">
+    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
+      {/* Background grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:32px_32px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-slate-900/40" />
 
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-3xl mb-4 shadow-lg">
-              🤖
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">HelpBot Admin</h1>
-            <p className="text-sm text-gray-500 mt-1 text-center">
-              Secure admin panel for your Telegram bot
-            </p>
-          </div>
+      <div className="relative w-full max-w-sm">
+        {/* Card */}
+        <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          {/* Top accent line */}
+          <div className="h-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
 
-          {/* States */}
-          {status === 'verifying' && (
-            <div className="flex flex-col items-center gap-3 py-4">
-              <svg className="animate-spin h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-              <p className="text-sm text-gray-600">Verifying your identity…</p>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-center">
-              <p className="text-red-700 font-medium text-sm">❌ {error}</p>
-            </div>
-          )}
-
-          {/* How to access */}
-          {status !== 'verifying' && (
-            <div className="bg-blue-50 rounded-xl p-5 space-y-3">
-              <p className="text-sm font-semibold text-blue-800">How to access the panel:</p>
-
-              <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-                <p className="text-sm text-blue-900">Open your Telegram bot</p>
+          <div className="p-8">
+            {/* Logo */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
               </div>
+              <h1 className="text-lg font-semibold text-white">Embassy Bot Admin</h1>
+              <p className="text-sm text-slate-400 mt-0.5">Secure admin panel</p>
+            </div>
 
-              <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-                <div>
-                  <p className="text-sm text-blue-900">Send the command:</p>
-                  <code className="inline-block mt-1 bg-white border border-blue-200 text-blue-700 font-mono text-sm px-3 py-1 rounded-lg">
-                    /webadmin
-                  </code>
+            {/* Verifying state */}
+            {status === 'verifying' && (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                <p className="text-sm text-slate-400">Verifying your identity…</p>
+              </div>
+            )}
+
+            {/* Error state */}
+            {status === 'error' && (
+              <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+                <svg className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <p className="text-sm text-rose-300">{error}</p>
+              </div>
+            )}
+
+            {/* Instructions */}
+            {status !== 'verifying' && (
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">How to access</p>
+                {[
+                  { step: '1', text: 'Open your Telegram bot' },
+                  { step: '2', text: <>Send <code className="bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-xs font-mono">/webadmin</code></> },
+                  { step: '3', text: 'Tap the link the bot sends you' },
+                ].map(({ step, text }) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-xs flex items-center justify-center font-semibold flex-shrink-0">
+                      {step}
+                    </span>
+                    <p className="text-sm text-slate-300">{text}</p>
+                  </div>
+                ))}
+
+                <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  <p className="text-xs text-slate-500">Single-use link · expires in 5 minutes</p>
                 </div>
               </div>
-
-              <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-                <p className="text-sm text-blue-900">Click the <strong>Open Admin Panel</strong> button the bot sends you</p>
-              </div>
-
-              <div className="mt-2 pt-3 border-t border-blue-200">
-                <p className="text-xs text-blue-600">
-                  🔒 Each link is single-use and expires in 5 minutes.
-                  Only registered admins can generate a link.
-                </p>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-
-        <p className="text-center text-xs text-slate-500 mt-4">
-          Only registered admins can access this panel.
-        </p>
       </div>
     </div>
   )
