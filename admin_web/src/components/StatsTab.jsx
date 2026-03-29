@@ -64,7 +64,7 @@ export default function StatsTab() {
   if (loading) return <Spinner />
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-full">
       {/* Overview */}
       <div>
         <h2 className="text-base font-semibold text-gray-900 mb-4">Overview</h2>
