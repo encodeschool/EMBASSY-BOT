@@ -85,9 +85,9 @@ jobs:
             cd ${{ secrets.VDS_PATH }}
 
             # Apply nginx config
-            cp deploy/nginx.conf /etc/nginx/sites-available/embassybot
-            ln -sf /etc/nginx/sites-available/embassybot /etc/nginx/sites-enabled/embassybot
-            nginx -t && systemctl reload nginx
+            sudo cp deploy/nginx.conf /etc/nginx/sites-available/embassybot
+            sudo ln -sf /etc/nginx/sites-available/embassybot /etc/nginx/sites-enabled/embassybot
+            sudo nginx -t && sudo systemctl reload nginx
 
             sudo systemctl restart helpbot
 

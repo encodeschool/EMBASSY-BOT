@@ -6,7 +6,7 @@ import secrets
 import time
 
 # { token: (admin_id, expires_at) }
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 _store: Dict[str, Tuple[int, float]] = {}
 
@@ -19,7 +19,7 @@ def create(admin_id: int) -> str:
     return token
 
 
-def consume(token: str) -> int | None:
+def consume(token: str) -> Optional[int]:
     """Validate and remove token. Returns admin_id or None."""
     entry = _store.pop(token, None)
     if not entry:

@@ -6,9 +6,9 @@ Wants=postgresql.service
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/embassybot
-EnvironmentFile=/opt/embassybot/.env
-ExecStart=/opt/embassybot/venv/bin/python app.py
+WorkingDirectory=/home/encode/embassybot
+EnvironmentFile=/home/encode/embassybot/.env
+ExecStart=/home/encode/embassybot/venv/bin/python app.py
 Restart=always
 RestartSec=10
 StandardOutput=journal

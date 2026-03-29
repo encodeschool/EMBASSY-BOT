@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import time
 import os
+from typing import Optional
 import jwt
 from config import BOT_TOKEN, ADMINS
 
@@ -43,7 +44,7 @@ def create_token(user_id: int) -> str:
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
 
-def decode_token(token: str) -> int | None:
+def decode_token(token: str) -> Optional[int]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return int(payload["sub"])
