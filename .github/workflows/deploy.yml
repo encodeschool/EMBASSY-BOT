@@ -72,7 +72,7 @@ jobs:
           target: "${{ secrets.VDS_PATH }}/admin_web/"
           overwrite: true
 
-      # ── 5. Restart service ───────────────────────────────────
+      # ── 5. Restart service & apply nginx config ──────────────────
       - name: Restart service
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -81,8 +81,17 @@ jobs:
           key: ${{ secrets.VDS_SSH_KEY }}
           port: ${{ secrets.VDS_PORT }}
           script: |
+            set -e
+            cd ${{ secrets.VDS_PATH }}
+
+            # Apply nginx config
+            cp deploy/nginx.conf /etc/nginx/sites-available/embassybot
+            ln -sf /etc/nginx/sites-available/embassybot /etc/nginx/sites-enabled/embassybot
+            nginx -t && systemctl reload nginx
+
             sudo systemctl restart helpbot
 
-            curl -f http://localhost:8000/health || echo "⚠️ Health check failed"
+            sleep 3
+            curl -f http://localhost:8010/api/docs > /dev/null 2>&1 && echo "✅ API up" || echo "⚠️ Health check failed"
 
             echo "✅ Deploy complete"

@@ -14,7 +14,7 @@ from api import token_store
 
 router = Router()
 
-ADMIN_PANEL_URL = os.getenv("ADMIN_PANEL_URL", "http://localhost:5173")
+ADMIN_PANEL_URL = os.getenv("ADMIN_PANEL_URL", "https://embassy.encode.uz")
 
 
 def is_admin(user_id: int) -> bool:
@@ -30,24 +30,13 @@ async def webadmin(message: types.Message):
     token = token_store.create(message.from_user.id)
     url = f"{ADMIN_PANEL_URL}/?token={token}"
 
-    is_localhost = "localhost" in url or "127.0.0.1" in url
-
-    if is_localhost:
-        # Telegram rejects localhost in inline button URLs — send as plain text
-        await message.answer(
-            f"🌐 <b>Admin Panel</b>\n\n"
-            f"Your one-time login link (valid for 5 minutes):\n\n"
-            f"{url}",
-            parse_mode="HTML",
-        )
-    else:
-        await message.answer(
-            "🌐 <b>Admin Panel</b>\n\nYour one-time login link (valid for 5 minutes):",
-            parse_mode="HTML",
-            reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[[
-                types.InlineKeyboardButton(text="Open Admin Panel 🚀", url=url)
-            ]])
-        )
+    await message.answer(
+        "🌐 <b>Admin Panel</b>\n\nYour one-time login link (valid for 5 minutes):",
+        parse_mode="HTML",
+        reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[[
+            types.InlineKeyboardButton(text="Open Admin Panel 🚀", url=url)
+        ]])
+    )
 
 
 # --- View bookings with status buttons ---
