@@ -88,7 +88,7 @@ async def show_calendar(message: types.Message, _=lambda k, **kw: k, lang: str =
         booked_days = await get_day_status(session, now.year, now.month)
 
     kb = generate_calendar(now.year, now.month, booked_days)
-    await message.answer(_("select_date"), reply_markup=kb)
+    await message.answer(_("calendar_legend"), reply_markup=kb, parse_mode="HTML")
 
 
 # =========================

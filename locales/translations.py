@@ -9,6 +9,7 @@ TEXTS = {
         "btn_profile": "Profile",
 
         # Booking flow
+        "calendar_legend": "📅 Select a date:\n\n<b>Legend:</b>\n· — past date\n~ — few slots left\n✗ — fully booked\n<i>number</i> — available",
         "select_date": "📅 Select a date:",
         "day_fully_booked": "❌ This day is fully booked",
         "selected_date_choose_time": "📅 Selected date: {date}\n\n⏰ Choose a time:",
@@ -53,6 +54,7 @@ TEXTS = {
         "btn_profile": "Профиль",
 
         # Booking flow
+        "calendar_legend": "📅 Выберите дату:\n\n<b>Обозначения:</b>\n· — прошедшая дата\n~ — мало мест\n✗ — мест нет\n<i>число</i> — доступно",
         "select_date": "📅 Выберите дату:",
         "day_fully_booked": "❌ Этот день полностью занят",
         "selected_date_choose_time": "📅 Выбранная дата: {date}\n\n⏰ Выберите время:",
@@ -97,6 +99,7 @@ TEXTS = {
         "btn_profile": "Profil",
 
         # Booking flow
+        "calendar_legend": "📅 Sanani tanlang:\n\n<b>Belgilar:</b>\n· — o'tgan sana\n~ — kam joy qoldi\n✗ — joy yo'q\n<i>raqam</i> — mavjud",
         "select_date": "📅 Sanani tanlang:",
         "day_fully_booked": "❌ Bu kun to'liq band",
         "selected_date_choose_time": "📅 Tanlangan sana: {date}\n\n⏰ Vaqtni tanlang:",

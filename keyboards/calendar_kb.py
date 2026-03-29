@@ -27,15 +27,15 @@ def generate_calendar(year: int, month: int, booked_days: dict):
             else:
                 is_past = date_type(year, month, day) < today
                 if is_past:
-                    row.append(InlineKeyboardButton(text=f"✖ {day}", callback_data="ignore"))
+                    row.append(InlineKeyboardButton(text=f"· {day}", callback_data="ignore"))
                 else:
                     status = booked_days.get(day, 0)
                     if status == -1:
-                        text = f"❌ {day}"
+                        text = f"✗ {day}"   # fully booked
                     elif status > 0:
-                        text = f"⚠️ {day}"
+                        text = f"~ {day}"   # partially booked
                     else:
-                        text = f"✅ {day}"
+                        text = str(day)     # available
                     row.append(
                         InlineKeyboardButton(
                             text=text,
